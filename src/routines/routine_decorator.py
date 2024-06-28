@@ -71,6 +71,9 @@ class RoutineDecorator:
 
         logging_directory_path = Path(__file__).resolve().parents[2] / "logs"
 
+        # Create the directory if it does not exist
+        logging_directory_path.mkdir(parents=True, exist_ok=True)
+
         if not logger.handlers:
             # Create a TimedRotatingFileHandler that rotates logs daily
             handler = TimedRotatingFileHandler(
