@@ -23,7 +23,6 @@ async def main_task() -> None:
     routine_manager: RoutineManager = RoutineManager()
 
     await routine_manager.register_tasks(tasks=routine_list)
-
     await routine_manager.run_tasks()
 
     await sleep(1)
