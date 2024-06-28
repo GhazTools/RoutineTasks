@@ -80,7 +80,9 @@ def get_force_graph_list() -> List[ForceGraph]:
     return force_graphs
 
 
-@RoutineDecorator(task_name="force_graph_routine", interval=30)
+@RoutineDecorator(
+    task_name="force_graph_routine", interval=1800
+)  # Run every 30 minutes
 async def routine() -> None:
     """
     The routine to get the force graph list

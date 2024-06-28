@@ -9,11 +9,12 @@ Edit Log:
 """
 
 # STANDARD LIBRARY IMPORTS
-from typing import Dict, Set, List, Tuple, TypedDict
-from os import listdir
-from os.path import isdir
+from json import dump, load, JSONDecodeError
+from os import listdir, walk, remove
+from os.path import isdir, join, exists, getmtime, abspath, dirname
 from re import findall
-from json import dump
+from subprocess import run, CalledProcessError
+from typing import Dict, List, Set, Tuple, TypedDict
 
 # THIRD PARTY LIBRARY IMPORTS
 
@@ -70,6 +71,14 @@ class ForceGraph:
                 index += 1
 
             return index
+
+        self._pull_repository_updates()
+
+        if self._has_directory_changed():
+            print("Changes detected, updating force graph")
+        else:
+            print("No changes to force graph")
+            return
 
         file_data: GetAllFilesResult = self._get_all_files(
             self._obsidian_directory_path
@@ -189,3 +198,96 @@ class ForceGraph:
                         links.add(actual_link)
 
         return links
+
+    def _pull_repository_updates(self) -> None:
+        """Pulls the latest updates from the Git repository."""
+        try:
+            run(["git", "-C", self._obsidian_directory_path, "pull"], check=True)
+        except CalledProcessError as e:
+            print(f"Failed to pull updates from repository: {e}")
+
+    def _get_latest_modification_time(self, directory_path) -> float:
+        latest_mod_time: float = 0
+
+        for root, dirs, files in walk(directory_path):
+            # Skip the .git directory
+            if ".git" in dirs:
+                dirs.remove(".git")
+
+            for file in files:
+                file_path = join(root, file)
+
+                mod_time: float = getmtime(file_path)
+                if mod_time > latest_mod_time:
+                    latest_mod_time = mod_time
+
+        return latest_mod_time
+
+    def _get_last_update_timestamp(self) -> float:
+        force_graph_json_directory_path = join(
+            dirname(abspath(__file__)), "vault_update_timestamps.json"
+        )
+
+        if not exists(force_graph_json_directory_path):
+            return 0
+
+        with open(
+            force_graph_json_directory_path,
+            "r",
+            encoding="UTF-8",
+        ) as file:
+            try:
+                data = load(file)
+                if self._force_graph_json_path in data:
+                    return data[self._force_graph_json_path]
+            except JSONDecodeError as e:
+                print(
+                    "Error occured while trying to load file, improper json deleting", e
+                )
+                remove(force_graph_json_directory_path)
+
+        return 0
+
+    def _has_directory_changed(self) -> bool:
+        latest_mod_time = self._get_latest_modification_time(
+            self._obsidian_directory_path
+        )
+        last_update_timestamp: float = self._get_last_update_timestamp()
+
+        if latest_mod_time > last_update_timestamp:
+            self._update_timestamp_in_json(latest_mod_time)
+            return True
+
+        return False
+
+    def _update_timestamp_in_json(self, timestamp: float) -> bool:
+        force_graph_json_directory_path = join(
+            dirname(abspath(__file__)), "vault_update_timestamps.json"
+        )
+
+        time_stamp_json = {}
+
+        if not exists(force_graph_json_directory_path):
+            with open(
+                force_graph_json_directory_path,
+                "w",
+                encoding="UTF-8",
+            ) as file:
+                dump({}, file)
+        else:
+            with open(
+                force_graph_json_directory_path,
+                "r",
+                encoding="UTF-8",
+            ) as file:
+                time_stamp_json = load(file)
+                time_stamp_json[self._force_graph_json_path] = timestamp
+
+        with open(
+            force_graph_json_directory_path,
+            "w",
+            encoding="UTF-8",
+        ) as file:
+            dump(time_stamp_json, file)
+
+        return True
