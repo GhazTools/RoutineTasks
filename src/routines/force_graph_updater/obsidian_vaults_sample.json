@@ -1,0 +1,13 @@
+{
+    "data_directory": "/path/to/data/data_directory",
+    "vaults": [
+        {
+            "save_name": "vault_1",
+            "path": "/path/to/data/data_directory/vault_1"
+        },
+        {
+            "save_name": "vault_2",
+            "path": "/path/to/data/data_directory/vault_2"
+        }
+    ]
+}

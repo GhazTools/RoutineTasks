@@ -17,20 +17,14 @@ from asyncio import create_task, Task, CancelledError, gather
 # LOCAL LIBRARY IMPORTS
 
 
-class RoutineData(TypedDict):
-    name: str
-    routine_function: Callable
-    interval: int
-
-
 class RoutineManager:
     def __init__(self) -> None:
         self.tasks: List[Task] = []
 
-    async def register_tasks(self, tasks: List[RoutineData]) -> None:
+    async def register_tasks(self, tasks: List[Callable]) -> None:
         """Register the tasks to the task list."""
         for task in tasks:
-            created_task = create_task(task["routine_function"]())
+            created_task = create_task(task())
             self.tasks.append(created_task)
 
     async def run_tasks(self):

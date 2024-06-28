@@ -34,10 +34,10 @@ class RoutineDecorator:
 
     _task_names: Set[str] = set()
 
-    def __init__(self, interval: int, task_name: str):
+    def __init__(self, task_name: str, interval: int):
         """Initialize the decorator with the interval."""
-        self.interval = interval
         self.task_name = task_name
+        self.interval = interval
 
         self._add_task_name(task_name)
 
