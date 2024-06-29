@@ -21,14 +21,6 @@ from asyncio import sleep
 # LOCAL LIBRARY IMPORTS
 
 
-# class ImmediateFlushTimedRotatingFileHandler(TimedRotatingFileHandler):
-#     """A handler class which writes formatted logging records to disk files and flushes immediately."""
-
-#     def emit(self, record):
-#         super().emit(record)
-#         self.flush()  # Force flush the buffer to disk
-
-
 class RoutineDecorator:
     """Decorator to run a routine function at a specified interval."""
 
