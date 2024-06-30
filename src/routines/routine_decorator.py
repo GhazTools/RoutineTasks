@@ -9,7 +9,7 @@ Edit Log:
 """
 
 # STANDARD LIBRARY IMPORTS
-from typing import Callable, Set
+from typing import Callable, Set, TypedDict, NewType, cast
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
@@ -19,14 +19,15 @@ from pathlib import Path
 from asyncio import sleep
 
 # LOCAL LIBRARY IMPORTS
+from src.routines.routine_scheduler import RoutineScheduler
+
+Seconds = NewType("Seconds", int)
 
 
-# class ImmediateFlushTimedRotatingFileHandler(TimedRotatingFileHandler):
-#     """A handler class which writes formatted logging records to disk files and flushes immediately."""
+class RoutineMetadata(TypedDict):
+    """Metadata for the interval decorator."""
 
-#     def emit(self, record):
-#         super().emit(record)
-#         self.flush()  # Force flush the buffer to disk
+    interval: Seconds | RoutineScheduler
 
 
 class RoutineDecorator:
@@ -34,14 +35,14 @@ class RoutineDecorator:
 
     _task_names: Set[str] = set()
 
-    def __init__(self, task_name: str, interval: int):
+    def __init__(self, task_name: str, routine_metadata: RoutineMetadata):
         """Initialize the decorator with the interval."""
-        self.task_name = task_name
-        self.interval = interval
+        self._task_name = task_name
+        self._routine_metadata = routine_metadata
 
         self._add_task_name(task_name)
 
-        self.logger = self._setup_logger(task_name)
+        self._logger = self._setup_logger(task_name)
 
     def __call__(self, routine_function: Callable):
         """Make the instance callable and return the wrapper function."""
@@ -49,8 +50,8 @@ class RoutineDecorator:
         async def wrapper():
             while True:
                 await routine_function()
-                await sleep(self.interval)
-                self.logger.info("SUCCESS")
+                await sleep(self._get_seconds_to_run())
+                self._logger.info("SUCCESS")
 
         return wrapper
 
@@ -66,7 +67,7 @@ class RoutineDecorator:
 
     def _setup_logger(self, task_name: str):
         """Setup the logger for the routine function."""
-        logger = logging.getLogger(self.task_name)
+        logger = logging.getLogger(self._task_name)
         logger.setLevel(logging.INFO)
 
         logging_directory_path = Path(__file__).resolve().parents[2] / "logs"
@@ -88,3 +89,17 @@ class RoutineDecorator:
             logger.addHandler(handler)
 
         return logger
+
+    def _get_seconds_to_run(self) -> Seconds:
+        """Get the number of seconds to run the routine."""
+        seconds_till_next_run: Seconds
+
+        if isinstance(self._routine_metadata["interval"], RoutineScheduler):
+            seconds_till_next_run = cast(
+                Seconds, self._routine_metadata["interval"].seconds_till_next_run()
+            )
+            self._logger.info("Seconds till next run: %s", seconds_till_next_run)
+        else:
+            seconds_till_next_run = self._routine_metadata["interval"]
+
+        return seconds_till_next_run
