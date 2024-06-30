@@ -15,7 +15,7 @@ from typing import List, Callable
 
 # LOCAL LIBRARY IMPORTS
 from src.routines.force_graph_updater.routine import routine as force_graph_routine
-from src.routines.restart_services.routine import routine as restart_services
+# from src.routines.restart_services.routine import routine as restart_services
 
 
-routine_list: List[Callable] = [force_graph_routine, restart_services]
+routine_list: List[Callable] = [force_graph_routine]
