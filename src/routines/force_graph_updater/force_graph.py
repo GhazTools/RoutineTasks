@@ -102,7 +102,7 @@ class ForceGraph:
         for data in graph:
             force_graph_data["links"].append(data)
 
-        with open(self._force_graph_json_path, "w", encoding="utf-8") as output_file:
+        with open(self._force_graph_json_path + ".json", "w", encoding="utf-8") as output_file:
             dump(force_graph_data, output_file)
 
     # PRIVATE METHODS START HERE
