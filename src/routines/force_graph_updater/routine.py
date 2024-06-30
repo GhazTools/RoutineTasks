@@ -11,13 +11,13 @@ Edit Log:
 # STANDARD LIBRARY IMPORTS
 from json import load
 from os.path import abspath, dirname, join
-from typing import List, TypedDict, Set
+from typing import List, TypedDict, Set, cast
 
 # THIRD PARTY LIBRARY IMPORTS
 
 # LOCAL LIBRARY IMPORTS
 from src.routines.force_graph_updater.force_graph import ForceGraph
-from src.routines.routine_decorator import RoutineDecorator
+from src.routines.routine_decorator import RoutineDecorator, Seconds
 
 
 class VaultDataJson(TypedDict):
@@ -81,11 +81,11 @@ def get_force_graph_list() -> List[ForceGraph]:
 
 
 @RoutineDecorator(
-    task_name="force_graph_routine", interval=1800
+    task_name="force_graph_routine", routine_metadata={"interval": cast(Seconds, 1800)}
 )  # Run every 30 minutes
 async def routine() -> None:
     """
-    The routine to get the force graph list
+    The routine to update the force graph list
     """
 
     force_graph_list: List[ForceGraph] = get_force_graph_list()
