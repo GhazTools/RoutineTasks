@@ -1,4 +1,0 @@
-pypi-server.service
-personalWebsite.service
-obsidianFileRetrieverSvc.service
-tokenGranter.service
